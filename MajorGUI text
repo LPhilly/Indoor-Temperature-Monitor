@@ -1,0 +1,450 @@
+classdef MajorGUI < matlab.apps.AppBase
+
+    % Properties that correspond to app components
+    properties (Access = public)
+        UIFigure                       matlab.ui.Figure
+        SeasonLabel                    matlab.ui.control.Label
+        SeasonEditField                matlab.ui.control.NumericEditField
+        InitiateProgramButton          matlab.ui.control.Button
+        DaytimeReadingTextAreaLabel    matlab.ui.control.Label
+        DaytimeReadingTextArea         matlab.ui.control.TextArea
+        SuggestionsLabel               matlab.ui.control.Label
+        SuggestionsTextArea            matlab.ui.control.TextArea
+        TemperatureReadingsCLabel      matlab.ui.control.Label
+        Enteranumberfrom1to4forLabel   matlab.ui.control.Label
+        theseasonswintertoautumnLabel  matlab.ui.control.Label
+        IndoorTempInatorLabel          matlab.ui.control.Label
+        Gauge                          matlab.ui.control.Gauge
+        TextArea                       matlab.ui.control.TextArea
+    end
+
+    % Callbacks that handle component events
+    methods (Access = private)
+
+        % Value changed function: SeasonEditField
+        function SeasonEditFieldValueChanged(app, event)
+            global seasons_feedback
+            seasons_feedback = app.SeasonEditField.Value;
+            %Inspiried from MATLAB Tutorial
+            
+        end
+
+        % Callback function: DaytimeReadingTextArea, 
+        % InitiateProgramButton
+        function ButtonPushed(app, event)
+          global seasons_feedback
+            grove = arduino('/dev/cu.usbserial-0001','Nano3');
+            sample_light = 25;
+            light_values = [];
+            sample_temp = 100;
+            temp_array = [];
+            
+            %Inspiried from lab H
+             %Take light readings
+    for j = 1:sample_light
+    light_read = readVoltage(grove, 'A6');
+    light_values = [light_values, light_read];
+    end 
+    
+    light = mean(light_values);
+    
+    %Inspiried from Lab H
+    %Take Temp Values
+    for i = 1:sample_temp
+  volt = readVoltage(grove, 'A0');
+temp = (105.4713*volt) - 0.06196; 
+temp_array = [temp_array, temp];
+    end
+    
+% All app.x.Value functions were inspiried by MATLAB Tutorials    
+average_temperature = mean(temp_array);
+app.Gauge.Value = average_temperature
+app.TextArea.Value = num2str(average_temperature)
+
+%Create Conditional Statement From User Input
+if seasons_feedback == 1
+   
+%Daytime Suggestions
+    if light > 0.6
+        % Read temperature, convert to celsuis
+        app.DaytimeReadingTextArea.Value = 'Day'
+        
+        %Suggestions
+        if average_temperature > 18 & average_temperature < 23
+            Suggestion = 'Your current temperature is sustainable and keeping you comfy!' 
+            app.SuggestionsTextArea.Value = Suggestion   
+        elseif average_temperature > 23 
+            app.SuggestionsTextArea.Value = 'Lowering heater temperature can save you money and keep you comfy!' 
+        else 
+            app.SuggestionsTextArea.Value ='It seems cold, feel free to up the thermostat' 
+        end
+        %Nighttime Suggestions
+    elseif light < 0.6
+         app.DaytimeReadingTextArea.Value =  'Night'
+        if average_temperature < 16
+            app.SuggestionsTextArea.Value = 'It seems cold, ideal sleeping temperature is between 16 and 19 degrees celsius'
+        elseif average_temperature > 16 & average_temperature < 21 
+            app.SuggestionsTextArea.Value = 'You are currently in the right sleep temperature'
+        else 
+            app.SuggestionsTextArea.Value = 'Temperature is above sleep temp. Open a window to cool the room down'
+        end 
+    end 
+    %Dance of Sugar Plum Faries - Nutcracker
+    playTone(grove, 'D5', 1568, .5)
+    pause(0.5)
+    playTone(grove, 'D5', 1318, .5)
+    pause(0.5)
+    playTone(grove, 'D5', 1568, .5)
+    pause(0.65)
+    playTone(grove, 'D5', 1480, .65)
+    pause(0.65)
+    playTone(grove, 'D5', 1244, .65)
+    pause(0.65)
+    playTone(grove, 'D5', 1318, .75)
+    pause(2)
+    
+    % Spring
+elseif seasons_feedback == 2
+    
+%Daytime Suggestions
+    if light > 0.6
+        % More Display Suggestions
+         app.DaytimeReadingTextArea.Value = 'Day'
+        if average_temperature > 18 & average_temperature < 24
+    app.SuggestionsTextArea.Value = "Looks like you're staying comfy and being sustainable. Good job!" 
+        elseif average_temperature > 24 
+    app.SuggestionsTextArea.Value = 'Lowering heater temperature can save you money and keep you comfy!' 
+        else 
+   app.SuggestionsTextArea.Value = "It seems cold, feel free to up the thermostat" 
+        end
+        %Nighttime Suggestions
+    elseif light < 0.6
+         app.DaytimeReadingTextArea.Value= 'Night'
+        if average_temperature < 16
+            app.SuggestionsTextArea.Value = 'It seems cold, ideal sleeping temperature is between 16 and 19 degrees celsius'
+        elseif average_temperature > 16 & average_temperature < 21 
+            disp('You are currently in the right sleep temperature') 
+        else 
+            app.SuggestionsTextArea.Value = 'Temperature is above sleep temp. Open a window to cool the room down'
+        end 
+    end
+   % Four Seasons: Spring - Vivaldi
+playTone(grove, 'D5',658 , .3)
+pause(0.31)
+playTone(grove, 'D5', 784, .3)
+pause(0.31)
+playTone(grove, 'D5', 784, .3)
+pause(0.31)
+playTone(grove, 'D5', 784, .4)
+pause(0.41)
+playTone(grove, 'D5', 740, .2)
+pause(0.15)
+playTone(grove, 'D5', 658, .2)
+pause(0.15)
+playTone(grove, 'D5', 988, .65) 
+pause(0.66)
+%Possible song extention, I thought it didn't flow 
+%playTone(grove, 'D5', 988, 0.3) 
+%pause(0.31) 
+%playTone(grove, 'D5', 932, 0.35)
+%pause(0.36) 
+%playTone(grove, 'D5', 880, 0.4)
+%pause(0.41) 
+%playTone(grove, 'D5', 932, 0.35)
+%pause(0.35) 
+%playTone(grove, 'D5', 988, 0.3) 
+%pause(0.3) 
+%playTone(grove, 'D5', 932, 0.4)
+%pause(0.41) 
+%playTone(grove, 'D5', 880, 0.4)
+%pause(0.41) 
+%playTone(grove, 'D5', 740, .65)
+pause(2)
+
+%Summer
+elseif seasons_feedback == 3 
+   
+%Daytime Suggestions
+    if light > 0.6
+        % Read temperature, convert to celsuis
+         app.DaytimeReadingTextArea.Value = 'Day'
+        if average_temperature > 23 & average_temperature < 26
+   app.SuggestionsTextArea.Value = "It feels comfy and sustainable!"
+        elseif average_temperature > 26 
+    app.SuggestionsTextArea.Value = 'It seems hot in here, turn on the AC'
+        elseif average_temperature < 23 
+     app.SuggestionsTextArea.Value = 'It seems cold. Turning off the AC can save money and keep you comfy!'
+        end
+        %Nighttime Suggestions
+    elseif light < 0.6
+         app.DaytimeReadingTextArea.Value = 'Night'
+        if average_temperature < 16
+            app.SuggestionsTextArea.Value =  "It seems cold, ideal sleeping temperature is between 16 and 19 degrees celsius. This might be higher if it's hot"
+        elseif average_temperature > 16 & average_temperature < 22 
+            app.SuggestionsTextArea.Value = 'You are currently in the right sleep temperature' 
+        elseif average_temperature > 22 
+            app.SuggestionsTextArea.Value = 'Temperature is above sleep temp. Open a window or turn on the AC to cool the room down'
+        end 
+    end 
+%Bella Ciao - Traditional   
+playTone(grove, 'D5', 165, .45)
+pause(0.46) 
+playTone(grove, 'D5', 220, .45)
+pause(0.46) 
+playTone(grove, 'D5', 247, .25)
+pause(0.26) 
+playTone(grove, 'D5', 262, .65)
+pause(0.66) 
+playTone(grove, 'D5', 247, .45)
+pause(0.46) 
+playTone(grove, 'D5', 220, .25)
+pause(0.26) 
+playTone(grove, 'D5', 262, .65)
+pause(0.66) 
+playTone(grove, 'D5', 247, .45)
+pause(0.46) 
+playTone(grove, 'D5', 220, .25)
+pause(0.26) 
+playTone(grove, 'D5', 330, .65)
+pause(0.66)
+playTone(grove, 'D5', 330, .65)
+pause(0.66)
+playTone(grove, 'D5', 330, .65)
+pause(2)
+
+%Autumn 
+elseif seasons_feedback == 4 
+
+%Daytime Suggestions
+    if light > 0.6
+         app.DaytimeReadingTextArea.Value = 'Day'
+        if average_temperature > 18 & average_temperature < 22
+    app.SuggestionsTextArea.Value = 'No suggestions thus far' 
+        elseif average_temperature > 22 
+    app.SuggestionsTextArea.Value = 'Lowering heater temperature can save you money and keep you comfy!'
+        else 
+    app.SuggestionsTextArea.Value =  "It seems cold, feel free to up the thermostat" 
+        end
+        %Nighttime Suggestions
+    elseif light < 0.6
+        app.DaytimeReadingTextArea.Value = 'Night'
+        if average_temperature < 16
+            app.SuggestionsTextArea.Value = 'It seems cold, ideal sleeping temperature is between 16 and 19 degrees celsius'
+        elseif average_temperature > 16 & average_temperature < 21 
+            app.SuggestionsTextArea.Value = 'You are currently in the right sleep temperature' 
+        else 
+            app.SuggestionsTextArea.Value = 'Temperature is above sleep temp. Open a window to cool the room down'
+        end
+    end 
+    % Hall of the Mountain King - Grieg
+    playTone(grove, 'D5', 110, .2)
+    pause(0.21) 
+    playTone(grove, 'D5', 124, .2)
+    pause(0.21) 
+    playTone(grove, 'D5', 131, .2)
+    pause(0.21) 
+    playTone(grove, 'D5', 147, .2)
+    pause(0.21)
+    playTone(grove, 'D5', 165, .2)
+    pause(0.21)
+    playTone(grove, 'D5', 131, .2)
+    pause(0.21)
+    playTone(grove, 'D5', 165, .2)
+    pause(0.5)
+    playTone(grove, 'D5', 155, .2)
+    pause(0.21)
+    playTone(grove, 'D5', 124, .2)
+    pause(0.21)
+    playTone(grove, 'D5', 155, .2)
+    pause(0.5)
+    playTone(grove, 'D5', 147, .2)
+    pause(0.21)
+    playTone(grove, 'D5', 155, .2)
+    pause(0.21)
+    playTone(grove, 'D5', 147, .2)
+    pause(0.21)
+else
+     app.DaytimeReadingTextArea.Value = 'ERROR'
+      app.SuggestionsTextArea.Value = 'ERROR: Enter valid number'
+% The Night King - Ramin Djawadi
+  playTone(grove, 'D5', 262, .2)
+  pause(0.4)
+  playTone(grove, 'D5', 262, 1)
+  pause(1.01)
+  playTone(grove, 'D5', 262, .2)
+  pause(0.21) 
+  playTone(grove, 'D5', 247, .4)
+  pause(1)
+  playTone(grove, 'D5', 175, .2)
+  pause(0.21)
+  playTone(grove, 'D5', 175, 1)
+  pause(1.01) 
+  playTone(grove, 'D5', 165, .5)
+  pause(2)
+end 
+
+           
+            
+        end
+    end
+
+    % Component initialization
+    methods (Access = private)
+
+        % Create UIFigure and components
+        function createComponents(app)
+
+            % Create UIFigure and hide until all components are created
+            app.UIFigure = uifigure('Visible', 'off');
+            app.UIFigure.Color = [0.149 0.149 0.149];
+            app.UIFigure.Colormap = [0.2431 0.149 0.6588;0.2431 0.1529 0.6745;0.2471 0.1569 0.6863;0.2471 0.1608 0.698;0.251 0.1647 0.7059;0.251 0.1686 0.7176;0.2549 0.1725 0.7294;0.2549 0.1765 0.7412;0.2588 0.1804 0.749;0.2588 0.1843 0.7608;0.2627 0.1882 0.7725;0.2627 0.1922 0.7843;0.2627 0.1961 0.7922;0.2667 0.2 0.8039;0.2667 0.2039 0.8157;0.2706 0.2078 0.8235;0.2706 0.2157 0.8353;0.2706 0.2196 0.8431;0.2745 0.2235 0.851;0.2745 0.2275 0.8627;0.2745 0.2314 0.8706;0.2745 0.2392 0.8784;0.2784 0.2431 0.8824;0.2784 0.2471 0.8902;0.2784 0.2549 0.898;0.2784 0.2588 0.902;0.2784 0.2667 0.9098;0.2784 0.2706 0.9137;0.2784 0.2745 0.9216;0.2824 0.2824 0.9255;0.2824 0.2863 0.9294;0.2824 0.2941 0.9333;0.2824 0.298 0.9412;0.2824 0.3059 0.9451;0.2824 0.3098 0.949;0.2824 0.3137 0.9529;0.2824 0.3216 0.9569;0.2824 0.3255 0.9608;0.2824 0.3294 0.9647;0.2784 0.3373 0.9686;0.2784 0.3412 0.9686;0.2784 0.349 0.9725;0.2784 0.3529 0.9765;0.2784 0.3569 0.9804;0.2784 0.3647 0.9804;0.2745 0.3686 0.9843;0.2745 0.3765 0.9843;0.2745 0.3804 0.9882;0.2706 0.3843 0.9882;0.2706 0.3922 0.9922;0.2667 0.3961 0.9922;0.2627 0.4039 0.9922;0.2627 0.4078 0.9961;0.2588 0.4157 0.9961;0.2549 0.4196 0.9961;0.251 0.4275 0.9961;0.2471 0.4314 1;0.2431 0.4392 1;0.2353 0.4431 1;0.2314 0.451 1;0.2235 0.4549 1;0.2196 0.4627 0.9961;0.2118 0.4667 0.9961;0.2078 0.4745 0.9922;0.2 0.4784 0.9922;0.1961 0.4863 0.9882;0.1922 0.4902 0.9882;0.1882 0.498 0.9843;0.1843 0.502 0.9804;0.1843 0.5098 0.9804;0.1804 0.5137 0.9765;0.1804 0.5176 0.9725;0.1804 0.5255 0.9725;0.1804 0.5294 0.9686;0.1765 0.5333 0.9647;0.1765 0.5412 0.9608;0.1765 0.5451 0.9569;0.1765 0.549 0.9529;0.1765 0.5569 0.949;0.1725 0.5608 0.9451;0.1725 0.5647 0.9412;0.1686 0.5686 0.9373;0.1647 0.5765 0.9333;0.1608 0.5804 0.9294;0.1569 0.5843 0.9255;0.1529 0.5922 0.9216;0.1529 0.5961 0.9176;0.149 0.6 0.9137;0.149 0.6039 0.9098;0.1451 0.6078 0.9098;0.1451 0.6118 0.9059;0.1412 0.6196 0.902;0.1412 0.6235 0.898;0.1373 0.6275 0.898;0.1373 0.6314 0.8941;0.1333 0.6353 0.8941;0.1294 0.6392 0.8902;0.1255 0.6471 0.8902;0.1216 0.651 0.8863;0.1176 0.6549 0.8824;0.1137 0.6588 0.8824;0.1137 0.6627 0.8784;0.1098 0.6667 0.8745;0.1059 0.6706 0.8706;0.102 0.6745 0.8667;0.098 0.6784 0.8627;0.0902 0.6824 0.8549;0.0863 0.6863 0.851;0.0784 0.6902 0.8471;0.0706 0.6941 0.8392;0.0627 0.698 0.8353;0.0549 0.702 0.8314;0.0431 0.702 0.8235;0.0314 0.7059 0.8196;0.0235 0.7098 0.8118;0.0157 0.7137 0.8078;0.0078 0.7176 0.8;0.0039 0.7176 0.7922;0 0.7216 0.7882;0 0.7255 0.7804;0 0.7294 0.7765;0.0039 0.7294 0.7686;0.0078 0.7333 0.7608;0.0157 0.7333 0.7569;0.0235 0.7373 0.749;0.0353 0.7412 0.7412;0.051 0.7412 0.7373;0.0627 0.7451 0.7294;0.0784 0.7451 0.7216;0.0902 0.749 0.7137;0.102 0.7529 0.7098;0.1137 0.7529 0.702;0.1255 0.7569 0.6941;0.1373 0.7569 0.6863;0.1451 0.7608 0.6824;0.1529 0.7608 0.6745;0.1608 0.7647 0.6667;0.1686 0.7647 0.6588;0.1725 0.7686 0.651;0.1804 0.7686 0.6471;0.1843 0.7725 0.6392;0.1922 0.7725 0.6314;0.1961 0.7765 0.6235;0.2 0.7804 0.6157;0.2078 0.7804 0.6078;0.2118 0.7843 0.6;0.2196 0.7843 0.5882;0.2235 0.7882 0.5804;0.2314 0.7882 0.5725;0.2392 0.7922 0.5647;0.251 0.7922 0.5529;0.2588 0.7922 0.5451;0.2706 0.7961 0.5373;0.2824 0.7961 0.5255;0.2941 0.7961 0.5176;0.3059 0.8 0.5059;0.3176 0.8 0.498;0.3294 0.8 0.4863;0.3412 0.8 0.4784;0.3529 0.8 0.4667;0.3686 0.8039 0.4549;0.3804 0.8039 0.4471;0.3922 0.8039 0.4353;0.4039 0.8039 0.4235;0.4196 0.8039 0.4118;0.4314 0.8039 0.4;0.4471 0.8039 0.3922;0.4627 0.8 0.3804;0.4745 0.8 0.3686;0.4902 0.8 0.3569;0.5059 0.8 0.349;0.5176 0.8 0.3373;0.5333 0.7961 0.3255;0.5451 0.7961 0.3176;0.5608 0.7961 0.3059;0.5765 0.7922 0.2941;0.5882 0.7922 0.2824;0.6039 0.7882 0.2745;0.6157 0.7882 0.2627;0.6314 0.7843 0.251;0.6431 0.7843 0.2431;0.6549 0.7804 0.2314;0.6706 0.7804 0.2235;0.6824 0.7765 0.2157;0.698 0.7765 0.2078;0.7098 0.7725 0.2;0.7216 0.7686 0.1922;0.7333 0.7686 0.1843;0.7451 0.7647 0.1765;0.7608 0.7647 0.1725;0.7725 0.7608 0.1647;0.7843 0.7569 0.1608;0.7961 0.7569 0.1569;0.8078 0.7529 0.1529;0.8157 0.749 0.1529;0.8275 0.749 0.1529;0.8392 0.7451 0.1529;0.851 0.7451 0.1569;0.8588 0.7412 0.1569;0.8706 0.7373 0.1608;0.8824 0.7373 0.1647;0.8902 0.7373 0.1686;0.902 0.7333 0.1765;0.9098 0.7333 0.1804;0.9176 0.7294 0.1882;0.9255 0.7294 0.1961;0.9373 0.7294 0.2078;0.9451 0.7294 0.2157;0.9529 0.7294 0.2235;0.9608 0.7294 0.2314;0.9686 0.7294 0.2392;0.9765 0.7294 0.2431;0.9843 0.7333 0.2431;0.9882 0.7373 0.2431;0.9961 0.7412 0.2392;0.9961 0.7451 0.2353;0.9961 0.7529 0.2314;0.9961 0.7569 0.2275;0.9961 0.7608 0.2235;0.9961 0.7686 0.2196;0.9961 0.7725 0.2157;0.9961 0.7804 0.2078;0.9961 0.7843 0.2039;0.9961 0.7922 0.2;0.9922 0.7961 0.1961;0.9922 0.8039 0.1922;0.9922 0.8078 0.1922;0.9882 0.8157 0.1882;0.9843 0.8235 0.1843;0.9843 0.8275 0.1804;0.9804 0.8353 0.1804;0.9765 0.8392 0.1765;0.9765 0.8471 0.1725;0.9725 0.851 0.1686;0.9686 0.8588 0.1647;0.9686 0.8667 0.1647;0.9647 0.8706 0.1608;0.9647 0.8784 0.1569;0.9608 0.8824 0.1569;0.9608 0.8902 0.1529;0.9608 0.898 0.149;0.9608 0.902 0.149;0.9608 0.9098 0.1451;0.9608 0.9137 0.1412;0.9608 0.9216 0.1373;0.9608 0.9255 0.1333;0.9608 0.9333 0.1294;0.9647 0.9373 0.1255;0.9647 0.9451 0.1216;0.9647 0.949 0.1176;0.9686 0.9569 0.1098;0.9686 0.9608 0.1059;0.9725 0.9686 0.102;0.9725 0.9725 0.0941;0.9765 0.9765 0.0863;0.9765 0.9843 0.0824];
+            app.UIFigure.Position = [100 100 665 496];
+            app.UIFigure.Name = 'MATLAB App';
+
+            % Create SeasonLabel
+            app.SeasonLabel = uilabel(app.UIFigure);
+            app.SeasonLabel.BackgroundColor = [0.149 0.149 0.149];
+            app.SeasonLabel.HorizontalAlignment = 'right';
+            app.SeasonLabel.FontSize = 15;
+            app.SeasonLabel.FontColor = [0.302 0.7451 0.9333];
+            app.SeasonLabel.Position = [435 280 60 22];
+            app.SeasonLabel.Text = 'Season:';
+
+            % Create SeasonEditField
+            app.SeasonEditField = uieditfield(app.UIFigure, 'numeric');
+            app.SeasonEditField.ValueChangedFcn = createCallbackFcn(app, @SeasonEditFieldValueChanged, true);
+            app.SeasonEditField.FontSize = 15;
+            app.SeasonEditField.FontColor = [0.302 0.7451 0.9333];
+            app.SeasonEditField.BackgroundColor = [0.149 0.149 0.149];
+            app.SeasonEditField.Position = [510 280 100 22];
+
+            % Create InitiateProgramButton
+            app.InitiateProgramButton = uibutton(app.UIFigure, 'push');
+            app.InitiateProgramButton.ButtonPushedFcn = createCallbackFcn(app, @ButtonPushed, true);
+            app.InitiateProgramButton.BackgroundColor = [0.149 0.149 0.149];
+            app.InitiateProgramButton.FontSize = 17;
+            app.InitiateProgramButton.FontColor = [0.302 0.7451 0.9333];
+            app.InitiateProgramButton.Position = [460.5 234 136 29];
+            app.InitiateProgramButton.Text = 'Initiate Program';
+
+            % Create DaytimeReadingTextAreaLabel
+            app.DaytimeReadingTextAreaLabel = uilabel(app.UIFigure);
+            app.DaytimeReadingTextAreaLabel.BackgroundColor = [0.149 0.149 0.149];
+            app.DaytimeReadingTextAreaLabel.HorizontalAlignment = 'right';
+            app.DaytimeReadingTextAreaLabel.FontSize = 18;
+            app.DaytimeReadingTextAreaLabel.FontColor = [0.302 0.7451 0.9333];
+            app.DaytimeReadingTextAreaLabel.Position = [1 129 153 23];
+            app.DaytimeReadingTextAreaLabel.Text = 'Daytime Reading: ';
+
+            % Create DaytimeReadingTextArea
+            app.DaytimeReadingTextArea = uitextarea(app.UIFigure);
+            app.DaytimeReadingTextArea.ValueChangedFcn = createCallbackFcn(app, @ButtonPushed, true);
+            app.DaytimeReadingTextArea.FontSize = 18;
+            app.DaytimeReadingTextArea.FontWeight = 'bold';
+            app.DaytimeReadingTextArea.FontAngle = 'italic';
+            app.DaytimeReadingTextArea.FontColor = [0.302 0.7451 0.9333];
+            app.DaytimeReadingTextArea.BackgroundColor = [0.149 0.149 0.149];
+            app.DaytimeReadingTextArea.Position = [161 22 143 144];
+            app.DaytimeReadingTextArea.Value = {'Make sure to place grove board in natural light for accurate reading.'};
+
+            % Create SuggestionsLabel
+            app.SuggestionsLabel = uilabel(app.UIFigure);
+            app.SuggestionsLabel.BackgroundColor = [0.149 0.149 0.149];
+            app.SuggestionsLabel.HorizontalAlignment = 'right';
+            app.SuggestionsLabel.FontSize = 18;
+            app.SuggestionsLabel.FontColor = [0.302 0.7451 0.9333];
+            app.SuggestionsLabel.Position = [319 129 111 23];
+            app.SuggestionsLabel.Text = 'Suggestions:';
+
+            % Create SuggestionsTextArea
+            app.SuggestionsTextArea = uitextarea(app.UIFigure);
+            app.SuggestionsTextArea.FontSize = 18;
+            app.SuggestionsTextArea.FontWeight = 'bold';
+            app.SuggestionsTextArea.FontAngle = 'italic';
+            app.SuggestionsTextArea.FontColor = [0.302 0.7451 0.9333];
+            app.SuggestionsTextArea.BackgroundColor = [0.149 0.149 0.149];
+            app.SuggestionsTextArea.Position = [439 22 220 144];
+            app.SuggestionsTextArea.Value = {'Program will provide temperature related suggestions. These are based off indoor temperature and current lighting conditions.'};
+
+            % Create TemperatureReadingsCLabel
+            app.TemperatureReadingsCLabel = uilabel(app.UIFigure);
+            app.TemperatureReadingsCLabel.HorizontalAlignment = 'center';
+            app.TemperatureReadingsCLabel.FontName = 'Krungthep';
+            app.TemperatureReadingsCLabel.FontSize = 15;
+            app.TemperatureReadingsCLabel.FontWeight = 'bold';
+            app.TemperatureReadingsCLabel.FontColor = [0.302 0.7451 0.9333];
+            app.TemperatureReadingsCLabel.Position = [85 441 223 22];
+            app.TemperatureReadingsCLabel.Text = 'Temperature Readings [*C]';
+
+            % Create Enteranumberfrom1to4forLabel
+            app.Enteranumberfrom1to4forLabel = uilabel(app.UIFigure);
+            app.Enteranumberfrom1to4forLabel.FontSize = 15;
+            app.Enteranumberfrom1to4forLabel.FontColor = [0.302 0.7451 0.9333];
+            app.Enteranumberfrom1to4forLabel.Position = [444 337 209 46];
+            app.Enteranumberfrom1to4forLabel.Text = 'Enter a number from 1 to 4 for';
+
+            % Create theseasonswintertoautumnLabel
+            app.theseasonswintertoautumnLabel = uilabel(app.UIFigure);
+            app.theseasonswintertoautumnLabel.FontSize = 15;
+            app.theseasonswintertoautumnLabel.FontColor = [0.302 0.7451 0.9333];
+            app.theseasonswintertoautumnLabel.Position = [444 324 209 22];
+            app.theseasonswintertoautumnLabel.Text = ' the seasons winter to autumn';
+
+            % Create IndoorTempInatorLabel
+            app.IndoorTempInatorLabel = uilabel(app.UIFigure);
+            app.IndoorTempInatorLabel.BackgroundColor = [0.149 0.149 0.149];
+            app.IndoorTempInatorLabel.FontName = 'Apple Chancery';
+            app.IndoorTempInatorLabel.FontSize = 30;
+            app.IndoorTempInatorLabel.FontWeight = 'bold';
+            app.IndoorTempInatorLabel.FontAngle = 'italic';
+            app.IndoorTempInatorLabel.FontColor = [0.9294 0.6941 0.1255];
+            app.IndoorTempInatorLabel.Position = [395 392 266 79];
+            app.IndoorTempInatorLabel.Text = 'Indoor-Temp-Inator';
+
+            % Create Gauge
+            app.Gauge = uigauge(app.UIFigure, 'circular');
+            app.Gauge.Limits = [10 30];
+            app.Gauge.MajorTicks = [10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31];
+            app.Gauge.MajorTickLabels = {'10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30'};
+            app.Gauge.BackgroundColor = [0.149 0.149 0.149];
+            app.Gauge.FontName = 'Krungthep';
+            app.Gauge.FontSize = 11;
+            app.Gauge.FontColor = [0.302 0.7451 0.9333];
+            app.Gauge.Position = [72 181 248 248];
+
+            % Create TextArea
+            app.TextArea = uitextarea(app.UIFigure);
+            app.TextArea.FontColor = [0.302 0.7451 0.9333];
+            app.TextArea.BackgroundColor = [0.149 0.149 0.149];
+            app.TextArea.Position = [153 208 86 18];
+
+            % Show the figure after all components are created
+            app.UIFigure.Visible = 'on';
+        end
+    end
+
+    % App creation and deletion
+    methods (Access = public)
+
+        % Construct app
+        function app = MajorGUI
+
+            % Create UIFigure and components
+            createComponents(app)
+
+            % Register the app with App Designer
+            registerApp(app, app.UIFigure)
+
+            if nargout == 0
+                clear app
+            end
+        end
+
+        % Code that executes before app deletion
+        function delete(app)
+
+            % Delete UIFigure when app is deleted
+            delete(app.UIFigure)
+        end
+    end
+end
